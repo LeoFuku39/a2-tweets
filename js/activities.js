@@ -50,7 +50,7 @@ function parseTweets(runkeeper_tweets) {
 	setText('weekdayOrWeekendLonger', avg(weekend) > avg(weekday) ? 'weekends' : 'weekdays');
 
 
-	
+
 	const activity_vis_spec = {
 	  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
 	  "description": "Number of tweets by activity type.",
@@ -76,7 +76,53 @@ function parseTweets(runkeeper_tweets) {
 	  }
 	};
 
+	const chartValues = completed
+		.filter(tweet => top3.includes(tweet.activityType) && tweet.distance > 0)
+		.map(tweet => ({
+			activityType: tweet.activityType,
+			distance: tweet.distance,
+			weekday: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][tweet.time.getUTCDay()]
+		}));
+	const weekdaySort = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+	const distance_vis_spec = {
+	  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+	  "description": "Distance by day of the week for the three most-tweeted activities.",
+	  "data": { "values": chartValues },
+	  "mark": "point",
+	  "encoding": {
+	    "x": { "field": "weekday", "type": "ordinal", "sort": weekdaySort, "title": "Day of week" },
+	    "y": { "field": "distance", "type": "quantitative", "title": "Distance (mi)" },
+	    "color": { "field": "activityType", "type": "nominal", "title": "Activity" }
+	  }
+	};
+	const distance_vis_mean_spec = {
+	  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+	  "description": "Mean distance by day of the week for the three most-tweeted activities.",
+	  "data": { "values": chartValues },
+	  "mark": "point",
+	  "encoding": {
+	    "x": { "field": "weekday", "type": "ordinal", "sort": weekdaySort, "title": "Day of week" },
+	    "y": { "aggregate": "mean", "field": "distance", "type": "quantitative", "title": "Mean distance (mi)" },
+	    "color": { "field": "activityType", "type": "nominal", "title": "Activity" }
+	  }
+	};
+
 	vegaEmbed('#activityVis', activity_vis_spec, {actions:false});
+	vegaEmbed('#distanceVis', distance_vis_spec, {actions:false});
+	vegaEmbed('#distanceVisAggregated', distance_vis_mean_spec, {actions:false});
+
+	const rawDiv = document.getElementById('distanceVis');
+	const aggDiv = document.getElementById('distanceVisAggregated');
+	const button = document.getElementById('aggregate');
+	rawDiv.style.display = 'block';
+	aggDiv.style.display = 'none';
+	button.innerText = 'Show means';
+	button.addEventListener('click', function() {
+		const showingRaw = rawDiv.style.display !== 'none';
+		rawDiv.style.display = showingRaw ? 'none' : 'block';
+		aggDiv.style.display = showingRaw ? 'block' : 'none';
+		button.innerText = showingRaw ? 'Show all activities' : 'Show means';
+	});
 }
 
 //Wait for the DOM to load
