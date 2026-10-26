@@ -5,15 +5,50 @@ function parseTweets(runkeeper_tweets) {
 		return;
 	}
 
-	//TODO: Filter to just the written tweets
+	const writtenTweets = runkeeper_tweets
+		.map((tweet, index) => ({
+			tweet: new Tweet(tweet.text, tweet.created_at),
+			number: index + 1
+		}))
+		.filter(({ tweet }) => tweet.written);
+	addEventHandlerForSearch(writtenTweets);
 }
 
-function addEventHandlerForSearch() {
-	//TODO: Search the written tweets as text is entered into the search box, and add them to the table
+function addEventHandlerForSearch(writtenTweets) {
+	const textFilter = document.getElementById('textFilter');
+	const searchCount = document.getElementById('searchCount');
+	const searchText = document.getElementById('searchText');
+	const tweetTable = document.getElementById('tweetTable');
+
+	function updateResults() {
+		const query = textFilter.value;
+		const matches = writtenTweets.filter(({ tweet }) =>
+			tweet.writtenText.toLowerCase().includes(query.toLowerCase())
+		);
+
+		searchText.textContent = query;
+		searchCount.textContent = matches.length;
+		tweetTable.replaceChildren();
+
+		for (const { tweet, number } of matches) {
+			const row = document.createElement('tr');
+			const numberCell = document.createElement('td');
+			const activityCell = document.createElement('td');
+			const textCell = document.createElement('td');
+
+			numberCell.textContent = number;
+			activityCell.textContent = tweet.activityType;
+			textCell.textContent = tweet.writtenText;
+			row.append(numberCell, activityCell, textCell);
+			tweetTable.append(row);
+		}
+	}
+
+	textFilter.addEventListener('input', updateResults);
+	updateResults();
 }
 
 //Wait for the DOM to load
 document.addEventListener('DOMContentLoaded', function (event) {
-	addEventHandlerForSearch();
 	loadSavedRunkeeperTweets().then(parseTweets);
 });
