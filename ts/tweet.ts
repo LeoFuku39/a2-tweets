@@ -32,8 +32,8 @@ class Tweet {
 
     get writtenText():string {
         const text = this.text
-            .replace(/https?:\/\/\S+/g, '')     // tweet link
-            .replace(/#runkeeper/gi, '')        // hashtag, any capitalization
+            .replace(/https?:\/\/\S+/g, '')
+            .replace(/#runkeeper/gi, '')
             .trim();
         
             const separator = text.indexOf(' - ');
@@ -45,19 +45,30 @@ class Tweet {
     }
 
     get activityType():string {
-        if (this.source != 'completed_event') {
+        if (this.source !== 'completed_event') {
             return "unknown";
         }
-        //TODO: parse the activity type from the text of the tweet
-        return "";
+
+        const activityMatch = this.text.match(
+            /^Just (?:completed|posted) (?:a|an)\s+(?:(?:\d+(?:\.\d+)?)\s+(?:km|mi)\s+)?(.+?)(?=\s+in\s+\d{1,2}:\d{2}(?::\d{2})?(?:\s|$)|\s+with @Runkeeper|\s+-\s|\s+https?:\/\/|\s+#|$)/i
+        );
+        return activityMatch?.[1].trim().toLowerCase() || "other";
     }
 
     get distance():number {
-        if(this.source != 'completed_event') {
+        if(this.source !== 'completed_event') {
             return 0;
         }
-        //TODO: prase the distance from the text of the tweet
-        return 0;
+
+        const distanceMatch = this.text.match(
+            /^Just (?:completed|posted) (?:a|an)\s+(\d+(?:\.\d+)?)\s+(km|mi)\b/i
+        );
+        if (!distanceMatch) {
+            return 0;
+        }
+
+        const distance = Number(distanceMatch[1]);
+        return distanceMatch[2].toLowerCase() === 'km' ? distance / 1.609 : distance;
     }
 
     getHTMLTableRow(rowNumber:number):string {
