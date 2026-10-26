@@ -27,16 +27,21 @@ class Tweet {
 
     //returns a boolean, whether the text includes any content written by the person tweeting.
     get written():boolean {
-        //TODO: identify whether the tweet is written
-        return false;
+        return this.writtenText.length > 0;
     }
 
     get writtenText():string {
-        if(!this.written) {
-            return "";
-        }
-        //TODO: parse the written text from the tweet
-        return "";
+        const text = this.text
+            .replace(/https?:\/\/\S+/g, '')     // tweet link
+            .replace(/#runkeeper/gi, '')        // hashtag, any capitalization
+            .trim();
+        
+            const separator = text.indexOf(' - ');
+            if (separator === -1) {
+                return "";
+            }
+            const writtenText = text.substring(separator + 3).trim();
+            return writtenText;
     }
 
     get activityType():string {

@@ -13,7 +13,7 @@ function parseTweets(runkeeper_tweets) {
 	//It works correctly, your task is to update the text of the other tags in the HTML file!
 	document.getElementById('numberTweets').innerText = tweet_array.length;	
 
-	const times = tweet_array.map(tweet => tweet.time.gettime());
+	const times = tweet_array.map(tweet => tweet.time.getTime());
 	const earliest = new Date(Math.min(...times));
 	const latest = new Date(Math.max(...times));
 
@@ -37,12 +37,26 @@ function parseTweets(runkeeper_tweets) {
 		miscellaneous: ['miscellaneous', 'miscellaneousPct']
 	};
 
+	const setClassText = (className, text) => {
+		document.querySelectorAll('.' + className).forEach(element => {
+			element.innerText = text;
+		});
+	};
+
 	for(const [type, [countId, pctId]] of Object.entries(categories)) {
 		const count = counts(type);
-		document.getElementById(countId).innerText = count;
-		document.getElementById(pctId).innerText = Math.format((count / total) * 100, {notation: 'fixed', precision: 2}) + '%';
+		const percentage = total === 0 ? 0 : (count / total) * 100;
+		setClassText(countId, count);
+		setClassText(pctId, percentage.toFixed(2) + '%');
 	}
-	
+
+	const completedTweets = tweet_array.filter(tweet => tweet.source === 'completed_event');
+	const writtenCount = completedTweets.filter(tweet => tweet.written).length;
+	const writtenPercentage = completedTweets.length === 0
+		? 0
+		: (writtenCount / completedTweets.length) * 100;
+	setClassText('written', writtenCount);
+	setClassText('writtenPct', writtenPercentage.toFixed(2) + '%');
 
 }
 
