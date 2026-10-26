@@ -17,15 +17,33 @@ function parseTweets(runkeeper_tweets) {
 	const earliest = new Date(Math.min(...times));
 	const latest = new Date(Math.max(...times));
 
-	const options = {
+	const timeOptions = {
 		weekday: 'long',
 		year: 'numeric',
 		month: 'long',
 		day: 'numeric',
 	};
 
-	document.getElementById('firstDate').innerText = earliest.toLocaleDateString('en-US', options);
-	document.getElementById('lastDate').innerText = latest.toLocaleDateString('en-US', options);
+	document.getElementById('firstDate').innerText = earliest.toLocaleDateString('en-US', timeOptions);
+	document.getElementById('lastDate').innerText = latest.toLocaleDateString('en-US', timeOptions);
+
+	const total = tweet_array.length;
+	const counts = type => tweet_array.filter(tweet => tweet.source === type).length;
+
+	const categories = {
+		completed_event: ['completedEvents', 'completedEventsPct'],
+		live_event: ['liveEvents', 'liveEventsPct'],
+		achievement: ['achievements', 'achievementsPct'],
+		miscellaneous: ['miscellaneous', 'miscellaneousPct']
+	};
+
+	for(const [type, [countId, pctId]] of Object.entries(categories)) {
+		const count = counts(type);
+		document.getElementById(countId).innerText = count;
+		document.getElementById(pctId).innerText = Math.format((count / total) * 100, {notation: 'fixed', precision: 2}) + '%';
+	}
+	
+
 }
 
 //Wait for the DOM to load
